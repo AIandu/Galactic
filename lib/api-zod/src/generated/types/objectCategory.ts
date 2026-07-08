@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface ObjectCategory {
+  id: string;
+  label: string;
+  count: number;
+  /** Hex color for this category */
+  color: string;
 }

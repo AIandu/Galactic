@@ -3,20 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: ORION — Orbital Real-time Intelligence & Operations Network API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: satellites
+    description: Satellite and space object tracking
+  - name: stats
+    description: Fleet statistics and dashboard data
+  - name: conjunctions
+    description: Conjunction and close approach analysis
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +30,295 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /satellites:
+    get:
+      operationId: listSatellites
+      tags: [satellites]
+      summary: List tracked space objects with current propagated positions
+      parameters:
+        - name: category
+          in: query
+          description: Filter by object category
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Max results to return
+          schema:
+            type: integer
+            default: 200
+        - name: search
+          in: query
+          description: Search by name
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of space objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpaceObject"
+
+  /satellites/categories:
+    get:
+      operationId: listCategories
+      tags: [satellites]
+      summary: List available object categories with counts
+      responses:
+        "200":
+          description: Category list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectCategory"
+
+  /satellites/{noradId}:
+    get:
+      operationId: getSatellite
+      tags: [satellites]
+      summary: Get detailed info for a single space object
+      parameters:
+        - name: noradId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Space object detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpaceObjectDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get overall fleet and threat statistics
+      responses:
+        "200":
+          description: Fleet statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FleetStats"
+
+  /conjunctions:
+    get:
+      operationId: listConjunctions
+      tags: [conjunctions]
+      summary: List predicted close approach events
+      responses:
+        "200":
+          description: Conjunction events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConjunctionEvent"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    SpaceObject:
+      type: object
+      required: [noradId, name, category, lat, lon, alt, velocity, inclination, period, rcs, launchYear, isDebris, isActive]
+      properties:
+        noradId:
+          type: string
+          description: NORAD catalog number
+        name:
+          type: string
+        category:
+          type: string
+          description: "One of: stations, starlink, gps, debris, active, military, weather"
+        lat:
+          type: number
+          description: Current geodetic latitude in degrees
+        lon:
+          type: number
+          description: Current geodetic longitude in degrees
+        alt:
+          type: number
+          description: Current altitude in kilometers
+        velocity:
+          type: number
+          description: Orbital velocity in km/s
+        inclination:
+          type: number
+          description: Orbital inclination in degrees
+        period:
+          type: number
+          description: Orbital period in minutes
+        rcs:
+          type: ["string", "null"]
+          description: Radar cross-section size class (SMALL, MEDIUM, LARGE)
+        launchYear:
+          type: ["integer", "null"]
+        isDebris:
+          type: boolean
+        isActive:
+          type: boolean
+
+    SpaceObjectDetail:
+      type: object
+      required: [noradId, name, category, lat, lon, alt, velocity, inclination, period, rcs, launchYear, isDebris, isActive, tleLine1, tleLine2, apogee, perigee, eccentricity, epoch, rightAscension, argOfPerigee, meanAnomaly, dragTerm]
+      properties:
+        noradId:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+        alt:
+          type: number
+        velocity:
+          type: number
+        inclination:
+          type: number
+        period:
+          type: number
+        rcs:
+          type: ["string", "null"]
+        launchYear:
+          type: ["integer", "null"]
+        isDebris:
+          type: boolean
+        isActive:
+          type: boolean
+        tleLine1:
+          type: string
+          description: TLE line 1 (raw)
+        tleLine2:
+          type: string
+          description: TLE line 2 (raw)
+        apogee:
+          type: number
+          description: Apogee altitude in km
+        perigee:
+          type: number
+          description: Perigee altitude in km
+        eccentricity:
+          type: number
+        epoch:
+          type: string
+          description: TLE epoch as ISO timestamp
+        rightAscension:
+          type: number
+          description: Right ascension of ascending node in degrees
+        argOfPerigee:
+          type: number
+          description: Argument of perigee in degrees
+        meanAnomaly:
+          type: number
+          description: Mean anomaly in degrees
+        dragTerm:
+          type: number
+          description: BSTAR drag term
+
+    ObjectCategory:
+      type: object
+      required: [id, label, count, color]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+        color:
+          type: string
+          description: Hex color for this category
+
+    FleetStats:
+      type: object
+      required: [totalTracked, activeCount, debrisCount, stationsCount, starlinkCount, gpsCount, weatherCount, militaryCount, threatLevel, lastUpdated, avgAltitude, highestThreatObject]
+      properties:
+        totalTracked:
+          type: integer
+        activeCount:
+          type: integer
+        debrisCount:
+          type: integer
+        stationsCount:
+          type: integer
+        starlinkCount:
+          type: integer
+        gpsCount:
+          type: integer
+        weatherCount:
+          type: integer
+        militaryCount:
+          type: integer
+        threatLevel:
+          type: string
+          description: "NOMINAL, ELEVATED, or CRITICAL"
+        lastUpdated:
+          type: string
+          description: ISO timestamp of last TLE cache refresh
+        avgAltitude:
+          type: number
+        highestThreatObject:
+          type: ["string", "null"]
+          description: Name of nearest conjunction candidate
+
+    ConjunctionEvent:
+      type: object
+      required: [id, primaryName, primaryNoradId, secondaryName, secondaryNoradId, minRange, probability, timeOfClosestApproach, relativeVelocity, threatLevel]
+      properties:
+        id:
+          type: string
+        primaryName:
+          type: string
+        primaryNoradId:
+          type: string
+        secondaryName:
+          type: string
+        secondaryNoradId:
+          type: string
+        minRange:
+          type: number
+          description: Predicted minimum range in km
+        probability:
+          type: number
+          description: Collision probability (0-1)
+        timeOfClosestApproach:
+          type: string
+          description: ISO timestamp
+        relativeVelocity:
+          type: number
+          description: Relative velocity in km/s
+        threatLevel:
+          type: string
+          description: "LOW, MEDIUM, HIGH, CRITICAL"
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

@@ -1,0 +1,2 @@
+- [CelesTrak 403 block](celestrak-403.md) — CelesTrak pub/TLE/* returns 403 server-side; use embedded TLE fallback dataset instead.
+- [WebGL in Replit preview](webgl-replit.md) — WebGL unavailable in Replit preview iframe; always wrap R3F Canvas in error boundary + 2D canvas fallback.

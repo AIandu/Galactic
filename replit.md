@@ -1,45 +1,52 @@
-# [Project name]
+# ORION — Orbital Real-time Intelligence & Operations Network
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A DoD-quality 3D interactive space traffic control system tracking real space objects in real time.
 
-## Run & Operate
+## What it does
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- **3D Interactive Globe** — React Three Fiber globe with real satellite positions propagated from TLE data via satellite.js. Falls back to a 2D canvas globe when WebGL is unavailable (e.g. Replit preview sandbox).
+- **Live Orbital Catalog** — 128+ space objects across 6 categories: Space Stations (ISS, CSS/Tiangong), Starlink, GPS/GNSS, Weather, Military, and Debris.
+- **Conjunction Analysis** — proximity-based close-approach detection for LEO objects within 10 km.
+- **HUD Interface** — tactical display with fleet telemetry, category filters, threat level, and per-satellite detail panels showing orbital kinematics and raw TLE data.
+- **Real Data** — live TLE data from CelesTrak (cached hourly), with a 100+ satellite embedded fallback dataset when CelesTrak is unreachable.
 
-## Stack
+## Architecture
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+This is a pnpm monorepo with two artifacts:
 
-## Where things live
+- **`artifacts/orion`** — React + Vite frontend (path: `/`)
+- **`artifacts/api-server`** — Express 5 API server (path: `/api`)
+- **`lib/api-spec`** — OpenAPI spec (source of truth for the API)
+- **`lib/api-client-react`** — Auto-generated React Query hooks
+- **`lib/api-zod`** — Auto-generated Zod validation schemas
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+## API Endpoints
 
-## Architecture decisions
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/healthz` | Health check |
+| GET | `/api/satellites` | List satellites (filter by category, search, limit) |
+| GET | `/api/satellites/categories` | Category counts and colors |
+| GET | `/api/satellites/:noradId` | Single satellite detail |
+| GET | `/api/stats` | Fleet statistics and threat level |
+| GET | `/api/conjunctions` | Close-approach event analysis |
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+## Data Source
 
-## Product
+TLE (Two-Line Element) data from **CelesTrak** (`celestrak.org`), fetched hourly across 6 groups: stations, Starlink, GPS, weather, military, debris. Position propagated server-side using `satellite.js`.
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+**Fallback:** If CelesTrak is unreachable (403/404), the server automatically uses an embedded dataset of 100+ well-known space objects covering all categories. This ensures the app is always functional.
 
-## User preferences
+## Running
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Frontend dev server: `pnpm --filter @workspace/orion run dev`
+- API server: `pnpm --filter @workspace/api-server run dev`
 
-## Gotchas
+Both workflows are managed by Replit automatically.
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+## User Preferences
 
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Project name: **ORION** (Orbital Real-time Intelligence & Operations Network)
+- Audience: DoD / defense tech / LinkedIn
+- Visual style: Dark tactical HUD, cyan primary (#00f0ff), mono font, military-grade aesthetics
+- No database needed — all data is live or embedded
