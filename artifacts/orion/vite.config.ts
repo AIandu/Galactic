@@ -63,10 +63,16 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   root: path.resolve(import.meta.dirname),
-  build: {
-    outDir: path.resolve(import.meta.dirname, 'dist/public'),
-    emptyOutDir: true,
+ build: {
+  outDir: path.resolve(import.meta.dirname, 'dist/public'),
+  emptyOutDir: true,
+  target: 'esnext',
+  rollupOptions: {
+    output: {
+      format: 'es',
+    },
   },
+},
   server: {
     port,
     strictPort: true,
