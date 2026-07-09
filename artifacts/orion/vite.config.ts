@@ -30,10 +30,11 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
-  plugins: [
+    plugins: [
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
+    topLevelAwait(), // <-- ADD THIS LINE RIGHT HERE
     ...(process.env.NODE_ENV !== 'production' &&
     process.env.REPL_ID !== undefined
       ? [
@@ -48,6 +49,7 @@ export default defineConfig({
         ]
       : []),
   ],
+
   optimizeDeps: {
     exclude: ['satellite.js'],
   },
