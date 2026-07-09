@@ -1,4 +1,5 @@
 import { useEffect, useRef, Component, type ReactNode } from "react";
+import * as satellite from "satellite.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WebGL detection
@@ -55,10 +56,13 @@ interface CatMeta {
   color: string;
 }
 
+interface TleData { line1: string; line2: string; }
+
 interface FallbackGlobeProps {
   satellites: Sat[];
   categories: CatMeta[];
   selectedNoradId?: string | null;
+  selectedSatTle?: TleData | null;
   onSelect: (id: string) => void;
 }
 
@@ -88,16 +92,44 @@ function satToXY(
   };
 }
 
-export function FallbackGlobe({ satellites, onSelect, selectedNoradId }: FallbackGlobeProps) {
-  const canvasRef         = useRef<HTMLCanvasElement>(null);
-  const satsRef           = useRef(satellites);
-  const selectedIdRef     = useRef(selectedNoradId);
-  const onSelectRef       = useRef(onSelect);
-  const animOffsetRef     = useRef(0); // for glow ring animation
+interface ArcPoint { lat: number; lon: number; alt: number; alpha: number; }
 
-  satsRef.current     = satellites;
+export function FallbackGlobe({ satellites, onSelect, selectedNoradId, selectedSatTle }: FallbackGlobeProps) {
+  const canvasRef       = useRef<HTMLCanvasElement>(null);
+  const satsRef         = useRef(satellites);
+  const selectedIdRef   = useRef(selectedNoradId);
+  const onSelectRef     = useRef(onSelect);
+  const animOffsetRef   = useRef(0);
+  const arcPointsRef    = useRef<ArcPoint[]>([]);
+
+  satsRef.current       = satellites;
   selectedIdRef.current = selectedNoradId ?? null;
-  onSelectRef.current = onSelect;
+  onSelectRef.current   = onSelect;
+
+  // Recompute orbital arc whenever TLE changes
+  useEffect(() => {
+    if (!selectedSatTle) { arcPointsRef.current = []; return; }
+    try {
+      const satrec = satellite.twoline2satrec(selectedSatTle.line1, selectedSatTle.line2);
+      const now    = Date.now();
+      const pts: ArcPoint[] = [];
+      for (let i = 0; i <= 96; i++) {
+        const t  = new Date(now + i * 60_000);
+        const pv = satellite.propagate(satrec, t);
+        if (!pv || typeof pv.position === "boolean" || !pv.position) continue;
+        const p    = pv.position as satellite.EciVec3<number>;
+        const gmst = satellite.gstime(t);
+        const geo  = satellite.eciToGeodetic({ x: p.x, y: p.y, z: p.z }, gmst);
+        pts.push({
+          lat:   satellite.degreesLat(geo.latitude),
+          lon:   satellite.degreesLong(geo.longitude),
+          alt:   geo.height,
+          alpha: Math.pow(1 - i / 96, 0.6),
+        });
+      }
+      arcPointsRef.current = pts;
+    } catch { arcPointsRef.current = []; }
+  }, [selectedSatTle?.line1, selectedSatTle?.line2]);
 
   // ── Click handler ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -213,6 +245,53 @@ export function FallbackGlobe({ satellites, onSelect, selectedNoradId }: Fallbac
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.stroke();
+
+      // ── Orbital arc (drawn before satellites so dots sit on top) ─────────
+      const arcPts = arcPointsRef.current;
+      if (arcPts.length >= 2) {
+        const selSatForArc = satsRef.current.find(s => s.noradId === selectedIdRef.current);
+        const arcColor = selSatForArc ? (CATEGORY_COLORS[selSatForArc.category] ?? "#00f0ff") : "#00f0ff";
+
+        // Ground track — dim line at Earth surface radius
+        ctx.save();
+        ctx.lineWidth = 1;
+        for (let i = 1; i < arcPts.length; i++) {
+          const from = arcPts[i - 1];
+          const to   = arcPts[i];
+          const { x: x1, y: y1, cosLon: c1 } = satToXY({ ...from, alt: 0 }, cx, cy, r, rotation);
+          const { x: x2, y: y2, cosLon: c2 } = satToXY({ ...to,   alt: 0 }, cx, cy, r, rotation);
+          if (c1 < 0 && c2 < 0) continue;
+          ctx.globalAlpha = from.alpha * 0.18;
+          ctx.strokeStyle = arcColor;
+          ctx.shadowBlur  = 0;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+
+        // Orbit arc — bright glowing line at altitude
+        ctx.lineWidth = 1.5;
+        for (let i = 1; i < arcPts.length; i++) {
+          const from = arcPts[i - 1];
+          const to   = arcPts[i];
+          const { x: x1, y: y1, cosLon: c1 } = satToXY(from, cx, cy, r, rotation);
+          const { x: x2, y: y2, cosLon: c2 } = satToXY(to,   cx, cy, r, rotation);
+          if (c1 < 0 && c2 < 0) continue;
+          const alpha = from.alpha * (c1 > 0 ? 0.75 : 0.15);
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = arcColor;
+          ctx.shadowColor = arcColor;
+          ctx.shadowBlur  = alpha > 0.4 ? 6 : 2;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+        ctx.shadowBlur  = 0;
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
 
       // ── Satellites ────────────────────────────────────────────────────────
       const selectedId = selectedIdRef.current;

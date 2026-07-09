@@ -78,6 +78,7 @@
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "satellite.js": "^7.0.1",
     "three": "^0.185.1"
   }
 }

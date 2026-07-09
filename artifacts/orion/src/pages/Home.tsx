@@ -2,6 +2,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
 import { useMemo, useRef, useState, useEffect } from "react";
 import * as THREE from "three";
+import * as satellite from "satellite.js";
 import {
   useListSatellites,
   useGetStats,
@@ -182,18 +183,111 @@ function SelectionMarker({ sat, catColor }: { sat: SatItem; catColor: string }) 
   );
 }
 
-/**
- * Single rotating parent group — Earth, satellite dots, and selection marker
- * all share the same transform. Zero phase-drift possible by construction.
- */
+// ─── OrbitalArc — SGP4-propagated trajectory + ground track ──────────────────
+
+interface TleData { line1: string; line2: string; }
+
+function OrbitalArc({ tleData, catColor }: { tleData: TleData; catColor: string }) {
+  const { arcLine, groundLine } = useMemo(() => {
+    try {
+      const satrec = satellite.twoline2satrec(tleData.line1, tleData.line2);
+      const now    = Date.now();
+      const STEPS  = 96;   // 96 × 1-min = 96 min ≈ one full LEO orbit
+      const R      = 6371; // Earth radius km
+      const SCALE  = 10 / R;
+      const c      = new THREE.Color(catColor);
+
+      const arcPos: number[] = [], arcCol: number[] = [];
+      const gndPos: number[] = [], gndCol: number[] = [];
+
+      for (let i = 0; i <= STEPS; i++) {
+        const t  = new Date(now + i * 60_000);
+        const pv = satellite.propagate(satrec, t);
+        if (!pv || typeof pv.position === "boolean" || !pv.position) continue;
+
+        const p    = pv.position as satellite.EciVec3<number>;
+        const gmst = satellite.gstime(t);
+        const geo  = satellite.eciToGeodetic({ x: p.x, y: p.y, z: p.z }, gmst);
+        const lat  = satellite.degreesLat(geo.latitude);
+        const lon  = satellite.degreesLong(geo.longitude);
+        const alt  = geo.height;
+
+        // Scene position (orbit altitude)
+        const r      = (R + alt) * SCALE;
+        const latRad = (lat * Math.PI) / 180;
+        const lonRad = (-lon * Math.PI) / 180;
+        const x = r * Math.cos(latRad) * Math.cos(lonRad);
+        const y = r * Math.sin(latRad);
+        const z = r * Math.cos(latRad) * Math.sin(lonRad);
+        arcPos.push(x, y, z);
+
+        // Fade: full at i=0 (current pos), transparent at i=STEPS
+        const a = Math.pow(1 - i / STEPS, 0.6);
+        arcCol.push(c.r * a, c.g * a, c.b * a);
+
+        // Ground track — project to just above Earth surface
+        const gr = 10.05;
+        gndPos.push(
+          gr * Math.cos(latRad) * Math.cos(lonRad),
+          gr * Math.sin(latRad),
+          gr * Math.cos(latRad) * Math.sin(lonRad),
+        );
+        const ga = a * 0.2;
+        gndCol.push(c.r * ga, c.g * ga, c.b * ga);
+      }
+
+      const count = arcPos.length / 3;
+      if (count < 2) return { arcLine: null, groundLine: null };
+
+      const makeLine = (pos: number[], col: number[]) => {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+        g.setAttribute("color",    new THREE.Float32BufferAttribute(col, 3));
+        return new THREE.Line(
+          g,
+          new THREE.LineBasicMaterial({
+            vertexColors: true, transparent: true,
+            blending: THREE.AdditiveBlending, depthWrite: false,
+          }),
+        );
+      };
+
+      return { arcLine: makeLine(arcPos, arcCol), groundLine: makeLine(gndPos, gndCol) };
+    } catch {
+      return { arcLine: null, groundLine: null };
+    }
+  }, [tleData.line1, tleData.line2, catColor]);
+
+  // Dispose Three.js objects when deps change or component unmounts
+  useEffect(() => {
+    return () => {
+      arcLine?.geometry.dispose();
+      (arcLine?.material as THREE.Material | undefined)?.dispose();
+      groundLine?.geometry.dispose();
+      (groundLine?.material as THREE.Material | undefined)?.dispose();
+    };
+  }, [arcLine, groundLine]);
+
+  return (
+    <>
+      {arcLine    && <primitive object={arcLine} />}
+      {groundLine && <primitive object={groundLine} />}
+    </>
+  );
+}
+
+// ─── Single rotating parent — Earth, dots, marker, and arc share one transform
+
 function RotatingScene({
-  satellites, categories, selectedNoradId, selectedSatItem, selectedCatColor, onSelect,
+  satellites, categories, selectedNoradId, selectedSatItem, selectedCatColor,
+  tleData, onSelect,
 }: {
   satellites: SatItem[];
   categories: CatItem[];
   selectedNoradId: string | null;
   selectedSatItem: SatItem | null;
   selectedCatColor: string;
+  tleData: TleData | null;
   onSelect: (id: string) => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -208,6 +302,9 @@ function RotatingScene({
         selectedNoradId={selectedNoradId}
         onSelect={onSelect}
       />
+      {tleData && (
+        <OrbitalArc tleData={tleData} catColor={selectedCatColor} />
+      )}
       {selectedSatItem && (
         <SelectionMarker sat={selectedSatItem} catColor={selectedCatColor} />
       )}
@@ -236,10 +333,13 @@ export default function Home() {
 
   const webglOk = isWebGLAvailable();
 
-  const selectedSatItem   = selectedNoradId
+  const selectedSatItem  = selectedNoradId
     ? (satellites?.find(s => s.noradId === selectedNoradId) ?? null)
     : null;
-  const selectedCatColor  = categories?.find(c => c.id === selectedSatItem?.category)?.color ?? "#00f0ff";
+  const selectedCatColor = categories?.find(c => c.id === selectedSatItem?.category)?.color ?? "#00f0ff";
+  const tleData: TleData | null = selectedSat?.tleLine1 && selectedSat?.tleLine2
+    ? { line1: selectedSat.tleLine1, line2: selectedSat.tleLine2 }
+    : null;
 
   return (
     <Shell>
@@ -251,6 +351,7 @@ export default function Home() {
                 satellites={satellites ?? []}
                 categories={categories ?? []}
                 selectedNoradId={selectedNoradId}
+                selectedSatTle={tleData}
                 onSelect={setSelectedNoradId}
               />
             }
@@ -269,6 +370,7 @@ export default function Home() {
                   selectedNoradId={selectedNoradId}
                   selectedSatItem={selectedSatItem}
                   selectedCatColor={selectedCatColor}
+                  tleData={tleData}
                   onSelect={setSelectedNoradId}
                 />
               )}
@@ -279,6 +381,7 @@ export default function Home() {
             satellites={satellites ?? []}
             categories={categories ?? []}
             selectedNoradId={selectedNoradId}
+            selectedSatTle={tleData}
             onSelect={setSelectedNoradId}
           />
         )}
