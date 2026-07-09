@@ -47,6 +47,9 @@ export default defineConfig({
         ]
       : []),
   ],
+  optimizeDeps: {
+    exclude: ['satellite.js'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),
@@ -78,4 +81,5 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: true,
   },
+});
 });
