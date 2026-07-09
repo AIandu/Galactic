@@ -1,6 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
 
+// Creation timestamp — fixed at authorship date (UTC)
+const CREATED_DATE = "09 JUL 2026";
+const CREATED_TIME = "00:00:00Z";
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [time, setTime] = useState(new Date());
@@ -58,6 +62,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 relative overflow-hidden flex flex-col">
         {children}
       </main>
+
+      {/* Creator credit — bottom of every page */}
+      <footer className="h-7 shrink-0 border-t border-primary/15 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-0 pointer-events-none select-none z-50">
+        <span className="font-mono text-[9px] tracking-[0.25em] text-primary/40 uppercase">
+          Created by&nbsp;
+        </span>
+        <span className="font-mono text-[9px] tracking-[0.25em] text-primary/75 uppercase font-bold">
+          Loretta Chapman
+        </span>
+        <span className="font-mono text-[9px] tracking-[0.25em] text-primary/30 uppercase">
+          &nbsp;·&nbsp;{CREATED_DATE}&nbsp;·&nbsp;{CREATED_TIME}
+        </span>
+      </footer>
     </div>
   );
 }
