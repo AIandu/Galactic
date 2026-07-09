@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "ORION — Orbital Real-time Intelligence & Operations Network"
+title = "O.S.N. — Orbital Surveillance Network"
 version = "1.0.0"
 id = "artifacts/orion"
 router = "path"

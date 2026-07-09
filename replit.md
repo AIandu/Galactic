@@ -1,4 +1,4 @@
-# ORION — Orbital Real-time Intelligence & Operations Network
+# O.S.N. — Orbital Surveillance Network
 
 A DoD-quality 3D interactive space traffic control system tracking real space objects in real time.
 
@@ -46,7 +46,7 @@ Both workflows are managed by Replit automatically.
 
 ## User Preferences
 
-- Project name: **ORION** (Orbital Real-time Intelligence & Operations Network)
+- Project name: **O.S.N.** (Orbital Surveillance Network)
 - Audience: DoD / defense tech / LinkedIn
 - Visual style: Dark tactical HUD, cyan primary (#00f0ff), mono font, military-grade aesthetics
 - No database needed — all data is live or embedded

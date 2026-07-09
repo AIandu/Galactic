@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 const CREATED_DATE = "09 JUL 2026";
 const CREATED_TIME = "00:00:00Z";
 
+// System designation
+const SYSTEM_NAME  = "O.S.N.";
+const SYSTEM_FULL  = "Orbital Surveillance Network";
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [time, setTime] = useState(new Date());
@@ -26,9 +30,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-3 group cursor-pointer">
             <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(0,240,255,1)] group-hover:scale-110 transition-transform" />
-            <h1 className="font-sans font-bold text-2xl tracking-[0.2em] text-primary drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]">
-              ORION
-            </h1>
+            <div className="flex flex-col leading-none">
+              <h1 className="font-sans font-bold text-2xl tracking-[0.2em] text-primary drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]">
+                {SYSTEM_NAME}
+              </h1>
+              <span className="text-[8px] tracking-[0.18em] text-primary/50 uppercase font-mono mt-0.5">
+                {SYSTEM_FULL}
+              </span>
+            </div>
           </Link>
           <nav className="flex gap-2">
             {navLinks.map((link) => {
