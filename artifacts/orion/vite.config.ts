@@ -30,11 +30,11 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
-    plugins: [
+  plugins: [
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
-    topLevelAwait(), // <-- ADD THIS LINE RIGHT HERE
+    topLevelAwait(), // This activates the plugin to handle the satellite.js top-level awaits
     ...(process.env.NODE_ENV !== 'production' &&
     process.env.REPL_ID !== undefined
       ? [
@@ -49,7 +49,6 @@ export default defineConfig({
         ]
       : []),
   ],
-
   optimizeDeps: {
     exclude: ['satellite.js'],
   },
@@ -66,16 +65,16 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   root: path.resolve(import.meta.dirname),
- build: {
-  outDir: path.resolve(import.meta.dirname, 'dist/public'),
-  emptyOutDir: true,
-  target: 'esnext',
-  rollupOptions: {
-    output: {
-      format: 'es',
+  build: {
+    outDir: path.resolve(import.meta.dirname, 'dist/public'),
+    emptyOutDir: true,
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        format: 'es',
+      },
     },
   },
-},
   server: {
     port,
     strictPort: true,
