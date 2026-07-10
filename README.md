@@ -1,4 +1,4 @@
-# Galactic: The Full-Stack TypeScript Framework for Rapid Product Development
+# Orbital Surveillance Network (OSN): Core Backend for Space Situational Awareness
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
@@ -8,45 +8,44 @@
 ![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-F97316?style=for-the-badge&logo=drizzle&logoColor=white)
 ![pnpm](https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white)
 
-## 🚀 Accelerate Your Product Development with Galactic
+![Conceptual Orbital Surveillance Network (OSN) Interface](docs/osn-mockup.png)
+_**(Note: This image is a conceptual placeholder for a future 3D globe and HUD interface. An actual visual asset will be added.)**_
 
-**Galactic** is a meticulously engineered, full-stack TypeScript framework designed to significantly accelerate your application development lifecycle. This comprehensive pnpm monorepo provides a robust, pre-architected foundation, allowing you to bypass weeks of foundational setup and immediately focus your engineering efforts on building unique features and delivering value to your users.
+## 🚀 Acquire the Core Intelligence Engine for Space Traffic Control
 
-Built for speed, scalability, and developer experience, Galactic integrates a modern TypeScript stack with best-in-class tools, offering a seamless path from idea to deployment.
+The **Orbital Surveillance Network (OSN)** project offers the foundational intelligence engine for advanced space traffic control and situational awareness. This robust backend system is meticulously engineered to provide real-time tracking and critical conjunction analysis of Low Earth Orbit (LEO) objects, empowering the development of next-generation space monitoring platforms.
+
+Built with TypeScript and Express.js, OSN efficiently integrates and processes Two-Line Element (TLE) data from CelesTrak, automatically identifying potential close-approach events and collision threats. It serves as a specialized, high-performance core for applications requiring precise orbital mechanics data and predictive analysis, offering a significant head start on complex space domain challenges.
 
 ## ✨ Key Features
 
-*   **Monorepo Structure (pnpm):** Streamlined dependency management and code sharing across your backend API and frontend UI.
-*   **Robust Express API:** A well-structured backend server written in TypeScript, featuring health routes, centralized logging, and an extensible architecture ready for your business logic.
-*   **PostgreSQL & Drizzle ORM:** Integrated database layer using PostgreSQL with Drizzle ORM for type-safe, performant, and flexible data management (schema definition awaiting your customization).
-*   **Rich React UI Component Library:** A comprehensive collection of pre-built, production-ready React UI components within the `mockup-sandbox`, providing a powerful toolkit for building beautiful and responsive user interfaces.
-*   **TypeScript End-to-End:** Leverage the benefits of type safety and improved developer experience across the entire stack.
-*   **Best Practices:** Implements modern development practices including structured routing, environment management, and modular design.
+*   **Real-time Satellite Tracking:** Ingests and processes current TLE data to calculate and track the positions of LEO objects.
+*   **Automated Conjunction Analysis:** Identifies potential close-approach events between satellites, providing early warnings for collision avoidance.
+*   **CelesTrak Data Integration:** Seamlessly fetches and updates TLE data directly from CelesTrak sources.
+*   **Scalable Express.js API:** A performant and well-structured API designed for real-time data access and analysis, ready for integration into various frontends.
+*   **Full-Stack Monorepo (pnpm):** Organized with `pnpm` for streamlined development across the backend API and frontend components.
+*   **TypeScript End-to-End:** Ensures type safety and enhanced developer experience across the entire codebase.
+*   **Modular Architecture:** Designed for extensibility, allowing easy integration of new orbital data sources or analytical modules.
 
 ## 🏛️ Architecture Overview
 
-Galactic is structured as a pnpm monorepo, dividing concerns into distinct packages:
+OSN is structured as a pnpm monorepo, delineating responsibilities across specialized packages:
 
-*   **`artifacts/api-server`**: The Express.js backend API, responsible for handling requests, interacting with the database, and serving data.
-*   **`artifacts/mockup-sandbox`**: The React frontend application, serving as a sandbox for UI components and a foundation for your user interface.
-*   **`lib/db`**: A shared library for database interactions, housing Drizzle ORM configurations and schema definitions.
+*   **`artifacts/api-server`**: The heart of the OSN, this Express.js backend API is responsible for TLE data fetching, processing, satellite tracking calculations, and conjunction analysis. It serves the core intelligence to potential client applications.
+*   **`artifacts/mockup-sandbox`**: A React-based frontend application serving as a sandbox for developing and showcasing UI components. While not the primary OSN frontend, it provides a rich toolkit for building responsive user interfaces that could consume the OSN API.
+*   **`artifacts/orion` (Planned)**: This package is intended to house the primary OSN frontend application – a 3D interactive globe with a Heads-Up Display (HUD) for visualizing space objects and conjunction events. *This component is currently undeveloped and represents a future enhancement.*
+*   **`lib/db`**: A shared library for database interactions, pre-configured with Drizzle ORM for type-safe data management. *The specific database schema for OSN space objects and conjunction events is currently a placeholder, awaiting implementation.*
 
 ```mermaid
 graph TD
-    A[Client (Browser/Mobile)] -->|HTTP/REST| B(artifacts/api-server)
-    B -->|Database Calls| C[lib/db]
-    C -->|SQL| D(PostgreSQL Database)
-    subgraph Frontend
-        E[React App] --> F[UI Components]
+    A[Client Application<br>(e.g., Planned 3D Globe)] -->|HTTP/REST API Calls| B(OSN API Server<br>artifacts/api-server)
+    B -->|Fetch External Data| C[CelesTrak (TLE Data)]
+    B -->|Database Interactions| D[lib/db<br>(Drizzle ORM)]
+    D -->|SQL Operations| E(PostgreSQL Database)
+
+    subgraph UI Component Development
+        F[React UI Sandbox<br>artifacts/mockup-sandbox]
     end
-    subgraph Backend
-        B --> G[API Routes]
-        B --> H[Middleware]
-        B --> I[Logging]
-    end
-    artifacts/mockup-sandbox --> E
-    artifacts/api-server --> B
-    lib/db --> C
 ```
 
 ## 🛠️ Technologies Used
@@ -62,86 +61,58 @@ graph TD
 
 ## ⚡ Getting Started
 
-Follow these steps to set up and run Galactic on your local machine.
+Follow these steps to set up and run the **OSN API Server** on your local machine.
 
 ### Prerequisites
 
 *   Node.js (LTS version recommended)
 *   pnpm
-*   Docker (for easily running PostgreSQL, or a local PostgreSQL installation)
+*   Docker (for easily running PostgreSQL, or a local PostgreSQL instance)
 
-### 1. Clone the Repository
+### Installation
 
-```bash
-git clone https://github.com/AIandu/Galactic.git
-cd Galactic
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/AIandu/Galactic.git
+    cd Galactic
+    ```
+2.  **Install dependencies:**
+    ```bash
+    pnpm install
+    ```
 
-### 2. Install Dependencies
+### Database Setup (PostgreSQL)
 
-Use pnpm to install all project dependencies across the monorepo:
+1.  **Start PostgreSQL:** If using Docker, you can run:
+    ```bash
+    docker run --name osn-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=osn_db -p 5432:5432 -d postgres:16
+    ```
+    Ensure you have `osn_db` created and accessible with the configured user/password.
+2.  **Configure Environment Variables:** Create a `.env` file in the `artifacts/api-server` directory (or your project root, depending on your `.env` loading strategy) with your database connection string, for example:
+    ```
+    DATABASE_URL="postgresql://user:password@localhost:5432/osn_db"
+    ```
 
-```bash
-pnpm install
-```
+### Running the OSN API Server
 
-### 3. Database Setup (PostgreSQL)
+1.  **Navigate to the API server directory:**
+    ```bash
+    cd artifacts/api-server
+    ```
+2.  **Start the server:**
+    ```bash
+    pnpm dev
+    ```
+    The API server should now be running, typically on `http://localhost:3000`.
 
-Galactic uses PostgreSQL. You can run a PostgreSQL instance locally using Docker:
+### Running the UI Mockup Sandbox
 
-```bash
-docker run --name galactic-db -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=galactic -p 5432:5432 -d postgres:16
-```
-
-Next, configure your database connection string. Create a `.env` file in the root of your project or within `artifacts/api-server` and `lib/db` as needed, adding your `DATABASE_URL` (e.g., `postgresql://user:password@localhost:5432/galactic`).
-
-**Note:** The Drizzle ORM setup is in place, but an example schema and migration process need to be defined. Refer to the Drizzle ORM documentation for schema definition and migrations (`pnpm run db:generate`, `pnpm run db:push`).
-
-### 4. Run the API Server
-
-Navigate to the `api-server` package and start the backend:
-
-```bash
-pnpm --filter api-server dev
-```
-
-The API server will typically run on `http://localhost:3000` (or as configured).
-
-### 5. Run the UI Sandbox
-
-In a separate terminal, navigate to the `mockup-sandbox` package and start the frontend development server:
-
-```bash
-pnpm --filter mockup-sandbox dev
-```
-
-The frontend application will usually be available at `http://localhost:5173` (or as configured).
-
-## 👨‍💻 Extending the Framework
-
-Galactic is designed to be highly extensible. Here's how you can start building your application on top of this framework:
-
-### Backend (`artifacts/api-server`)
-
-1.  **Define Database Schemas:** Populate `lib/db/src/schema/index.ts` with your application's data models using Drizzle ORM. Follow Drizzle's documentation to define tables, relations, and types.
-2.  **Generate Drizzle Migrations:** Once your schema is defined, generate migrations to apply changes to your PostgreSQL database.
-3.  **Add New API Routes:** Create new route files in `artifacts/api-server/src/routes/` to handle specific business logic. Integrate these into `artifacts/api-server/src/app.ts`.
-4.  **Implement Business Logic:** Develop services and controllers to encapsulate your application's core functionality.
-
-### Frontend (`artifacts/mockup-sandbox`)
-
-1.  **Build New Pages:** Create new React components and pages within `artifacts/mockup-sandbox/src/` to define your application's user interface.
-2.  **Utilize UI Components:** Leverage the extensive collection of pre-built components from `artifacts/mockup-sandbox/src/components/ui/` to rapidly assemble your UI.
-3.  **Integrate with API:** Use `fetch` or a client library (e.g., `axios`, `tanstack-query`) to connect your frontend with the `api-server`.
-
-### Monorepo
-
-To add new services or libraries, create new packages within the `artifacts/` or `lib/` directories and define them in the root `package.json` workspaces. This maintains the benefits of the monorepo structure.
-
-## 🤝 Contribution
-
-Contributions are welcome! If you have suggestions or want to improve Galactic, please feel free to open an issue or submit a pull request.
-
-## 📄 License
-
-This project is licensed under the MIT License.
+1.  **Navigate to the mockup sandbox directory:**
+    ```bash
+    cd artifacts/mockup-sandbox
+    ```
+2.  **Start the development server:**
+    ```bash
+    pnpm dev
+    ```
+    The UI component sandbox will be available in your browser, typically on `http://localhost:5173`.
