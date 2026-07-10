@@ -19,7 +19,7 @@ In the Render dashboard: **New > Web Service**, connect the repo, then set:
 - **Environment:** Node
 - **Build Command:**
   ```
-  corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
+  pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
   ```
 - **Start Command:**
   ```
@@ -36,7 +36,7 @@ In the Render dashboard: **New > Static Site**, connect the same repo, then set:
 - **Root Directory:** leave blank (repo root)
 - **Build Command:**
   ```
-  corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/orion run build
+  pnpm install --frozen-lockfile && pnpm --filter @workspace/orion run build
   ```
 - **Publish Directory:**
   ```
@@ -63,5 +63,6 @@ Once deployed, Render gives you a URL like `https://osn.onrender.com` — that's
 
 ## Notes
 
+- Don't add `corepack enable` to the build command — on Render's current build image it fails with `EROFS: read-only file system, unlink '/usr/bin/pnpm'`. The repo's root `package.json` now pins `"packageManager": "pnpm@10.26.1"`, which Render's Node buildpack reads automatically to install the matching pnpm version without needing `corepack enable`.
 - CORS is already open (`cors()` with no options) on the API, so cross-origin calls from the static site work out of the box.
 - Both services are on Render's free tier by default, which spins down when idle — the first request after inactivity can take ~30s (cold start). Upgrade to a paid instance if the buyer needs it always warm during a demo.
